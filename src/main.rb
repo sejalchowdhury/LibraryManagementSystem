@@ -1,43 +1,62 @@
-require_relative 'model/books.rb'
+require_relative 'controller/books.rb'
+require_relative 'controller/member.rb'
 require_relative 'update_book.rb'
+require_relative 'controller/borrower.rb'
 require_relative 'sqlconnect'
 require_relative 'model/member.rb'
-require_relative 'model/borrowers.rb'
+require_relative 'model/borrow.rb'
 require 'Date'
 require 'kafka'
 require_relative 'kafka_consumer.rb'
+require_relative '../config/application'
+require_relative  '../app/serializer/book_serializer.rb'
+require_relative  '../app/serializer/member_serializer.rb'
+require_relative  '../app/serializer/borrower_serializer.rb'
 
-# Add or delete a new book to the system and save it to db
-my_book = Books.new("Alphabets","Shakespeare","Language")
-my_book1 = Books.new("C++ in a nutshell","Bjrane","Programming")
-puts my_book.description
-my_book.saveToDB
-my_book1.saveToDB
-my_book.eraseOldBook("Alphabets")
-
-# Add/Update a member and keep the records of borrowed books throw error if member is not present
-member = Member.new("1","Sejal","1")
-member.saveMember
-member.book_borrowed("C++ in a nutshell","1")
-member.book_borrowed("C++ in a nutshell","3")
-
-# Pagination of books wrt author
-books = Books.new("Sample Book", "Author Name", "Sample Title")
-author = "Bjrane"
-limit = 2
-offset = 1
-books.get_books_by_author(author, limit, offset)
-
-# Update the details of an existing book
-updated_book = Update_book.new
-my_book.eraseOldBook(my_book.book_name)
-modified_book = Books.new("Sample Book", "Author Name", "Sample Title")
-updated_book.getUpdateDetails(my_book,modified_book)
-modified_book.saveToDB
+LibraryManagementSystem::Application.initialize!
 
 
-# Kafka Queue Integration after borrow event happens
-borrow = Borrowers.new(1,"Sejal","C++ in nutshell",Date.today)
-borrow.save
-consumer = KafkaConsumer.new
-consumer.start
+#Create/Update a new book
+BooksController.new.perform_add_and_delete_books
+
+#Delete a book
+# BooksController.new.delete_book("ABCD")
+
+#Create a new member
+# MemberController.new.add_new_member
+
+#Display all members
+MemberController.new.display_all_members
+
+#Delete a member
+# MemberController.new.delete_member("1")
+
+#Update the member
+# MemberController.new.update_member("10",{ name: "Prakash Singh"})
+
+#Borrow a book
+BorrowerController.new.borrow_book(1,"SDSDSD")
+
+
+
+
+
+
+
+
+# Review:
+# add to record instead of sql => Finished
+# callbacks in borrow after a book is borrowed a call back needs to be called => Finished
+# Segregate the controller do not keep all operations on main (book,member) we can add
+# the check if the person is a member of the library if not then we cannot lend book => Finished
+# filters in controller why and where can you use in this system
+# Scaffolding => (optional finish all of the above first then explore)
+
+
+# New Tasks
+# All the callbacks in the model => model hooks and validation
+# All the filters for controller =>
+# Association Call => Fetch the list of members and books and borrowers => Finished
+# 2 logical issues in functions of book and borrower fix that
+# CRUD add all 4 in all 3 models
+# Serializer and blueprints => What are they and where they are used and why ?
